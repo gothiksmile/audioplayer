@@ -28,6 +28,9 @@
         .disk img { width: 100%; height: 100%; object-fit: cover; }
         .body { flex-grow: 1; height: 120px; margin-left: -55px; padding-left: 70px; padding-right: 20px; border-radius: 15px; z-index: 1; display: flex; flex-direction: column; justify-content: center; color: white; transition: 0.3s; }
         .controls { display: flex; align-items: center; gap: 15px; margin-top: 10px; font-size: 18px; }
+        
+        /* Ползунок громкости в превью */
+        .vol-slider { width: 50px; cursor: pointer; height: 4px; accent-color: white; }
     </style>
 </head>
 <body>
@@ -47,6 +50,10 @@
             <label>Цвет фона</label>
             <input type="color" id="color" value="#5d6d7e">
         </div>
+        <div class="input-group">
+            <label>Цвет текста</label>
+            <input type="color" id="t-color" value="#ffffff">
+        </div>
         
         <button class="gen-btn" onclick="generate()">1. Сгенерировать код</button>
         <button id="copy-btn" class="copy-btn" onclick="copyCode()">2. Копировать код</button>
@@ -62,7 +69,8 @@
                 <div style="font-size:12px; opacity:0.8">Track number</div>
                 <div class="controls">
                     <span>⏮</span> <span style="font-size:24px">▶</span> <span>⏭</span>
-                    <span style="margin-left:auto; font-size:14px; opacity:0.6">🔀</span>
+                    <span style="margin-left:auto; font-size:14px; opacity:0.6">🔊</span>
+                    <input type="range" class="vol-slider" id="p-vol-slider" min="0" max="1" step="0.1" value="0.8">
                     <span style="font-size:14px; opacity:0.6">☰</span>
                 </div>
             </div>
@@ -73,8 +81,11 @@
 <script>
     // Живое превью
     const update = () => {
+        const textColor = document.getElementById('t-color').value;
         document.getElementById('p-img').src = document.getElementById('cover').value;
         document.getElementById('p-body').style.backgroundColor = document.getElementById('color').value;
+        document.getElementById('p-body').style.color = textColor;
+        document.getElementById('p-vol-slider').style.accentColor = textColor;
     };
     document.querySelectorAll('input').forEach(i => i.addEventListener('input', update));
     update();
@@ -82,10 +93,10 @@
     function generate() {
         const repo = document.getElementById('repo').value;
         const color = document.getElementById('color').value;
+        const tColor = document.getElementById('t-color').value;
         const cover = document.getElementById('cover').value;
 
-        // Весь движок плеера внутри одной строки (минимизировано для вставки)
-        const finalCode = `<div id="gs-player-root" style="width:450px;height:160px;display:flex;align-items:center;font-family:sans-serif;background:transparent;"><div style="width:140px;height:140px;border-radius:50%;border:5px solid #fff;box-shadow:0 8px 15px rgba(0,0,0,0.2);overflow:hidden;z-index:2;flex-shrink:0;"><img id="gs-art" src="${cover}" style="width:100%;height:100%;object-fit:cover;"></div><div id="gs-main" style="flex-grow:1;height:110px;background:${color};margin-left:-50px;padding-left:60px;padding-right:15px;border-radius:12px;color:#fff;display:flex;flex-direction:column;justify-content:center;z-index:1;position:relative;"><div style="font-weight:bold;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="gs-title">Загрузка...</div><div style="display:flex;align-items:center;gap:12px;margin-top:10px;font-size:18px;"><span id="gs-prev" style="cursor:pointer">⏮</span><span id="gs-play" style="cursor:pointer;font-size:24px">▶</span><span id="gs-next" style="cursor:pointer">⏭</span><span id="gs-shuff" style="cursor:pointer;margin-left:auto;font-size:14px;opacity:0.6">🔀</span><span id="gs-list" style="cursor:pointer;font-size:14px;opacity:0.6">☰</span></div><audio id="gs-audio"></audio><div id="gs-playlist-ui" style="display:none;position:absolute;top:115px;left:60px;width:200px;background:rgba(0,0,0,0.9);border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;font-size:11px;z-index:10;box-shadow:0 5px 15px rgba(0,0,0,0.3)"></div></div></div><script>(function(){const r="${repo}",api="https://api.github.com/repos/"+r+"/contents/";let t=[],c=0,s=false;const a=document.getElementById('gs-audio'),ti=document.getElementById('gs-title'),p=document.getElementById('gs-play');async function load(){try{const res=await fetch(api),d=await res.json();t=d.filter(f=>f.name.endsWith('.mp3')).map(f=>({name:f.name.replace('.mp3',''),url:"https://raw.githubusercontent.com/"+r+"/main/"+f.path}));if(t.length>0)set(0)}catch(e){ti.innerText="Ошибка GitHub"}}function set(i){c=i;a.src=t[i].url;ti.innerText=t[i].name}p.onclick=()=>{if(a.paused){a.play();p.innerText="⏸"}else{a.pause();p.innerText="▶"}};document.getElementById('gs-next').onclick=()=>{let n=s?Math.floor(Math.random()*t.length):(c+1)%t.length;set(n);a.play();p.innerText="⏸"};document.getElementById('gs-prev').onclick=()=>{let pr=(c-1+t.length)%t.length;set(pr);a.play();p.innerText="⏸"};document.getElementById('gs-shuff').onclick=function(){s=!s;this.style.color=s?"#ffeb3b":"#fff";this.style.opacity=s?"1":"0.6"};document.getElementById('gs-list').onclick=()=>{const u=document.getElementById('gs-playlist-ui');u.style.display=u.style.display==='none'?'block':'none';u.innerHTML=t.map((x,i)=>\`<div style="padding:5px;cursor:pointer;border-bottom:1px solid #444" onclick="window.plTrack(\${i})">\${x.name}</div>\`).join('')};window.plTrack=(i)=>{set(i);a.play();p.innerText="⏸";document.getElementById('gs-playlist-ui').style.display='none'};load()})()<\/script>`;
+        const finalCode = `<div id="gs-player-root" style="width:450px;height:160px;display:flex;align-items:center;font-family:sans-serif;background:transparent;"><div style="width:140px;height:140px;border-radius:50%;border:5px solid #fff;box-shadow:0 8px 15px rgba(0,0,0,0.2);overflow:hidden;z-index:2;flex-shrink:0;"><img id="gs-art" src="${cover}" style="width:100%;height:100%;object-fit:cover;"></div><div id="gs-main" style="flex-grow:1;height:110px;background:${color};margin-left:-50px;padding-left:60px;padding-right:15px;border-radius:12px;color:${tColor};display:flex;flex-direction:column;justify-content:center;z-index:1;position:relative;"><div style="font-weight:bold;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="gs-title">Загрузка...</div><div style="display:flex;align-items:center;gap:12px;margin-top:10px;font-size:18px;"><span id="gs-prev" style="cursor:pointer">⏮</span><span id="gs-play" style="cursor:pointer;font-size:24px">▶</span><span id="gs-next" style="cursor:pointer">⏭</span><span style="margin-left:auto;font-size:14px;opacity:0.6">🔊</span><input type="range" id="gs-vol" min="0" max="1" step="0.05" value="0.8" style="width:50px;cursor:pointer;accent-color:${tColor}"><span id="gs-list" style="cursor:pointer;font-size:14px;opacity:0.6">☰</span></div><audio id="gs-audio"></audio><div id="gs-playlist-ui" style="display:none;position:absolute;top:115px;left:60px;width:200px;background:rgba(0,0,0,0.9);border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;font-size:11px;z-index:10;box-shadow:0 5px 15px rgba(0,0,0,0.3);color:#fff;"></div></div></div><script>(function(){const r="${repo}",api="https://api.github.com/repos/"+r+"/contents/";let t=[],c=0;const a=document.getElementById('gs-audio'),ti=document.getElementById('gs-title'),p=document.getElementById('gs-play'),v=document.getElementById('gs-vol');async function load(){try{const res=await fetch(api),d=await res.json();t=d.filter(f=>f.name.endsWith('.mp3')).map(f=>({name:f.name.replace('.mp3',''),url:"https://raw.githubusercontent.com/"+r+"/main/"+f.path}));if(t.length>0)set(0)}catch(e){ti.innerText="Ошибка GitHub"}}function set(i){c=i;a.src=t[i].url;ti.innerText=t[i].name}p.onclick=()=>{if(a.paused){a.play();p.innerText="⏸"}else{a.pause();p.innerText="▶"}};v.oninput=(e)=>{a.volume=e.target.value};document.getElementById('gs-next').onclick=()=>{set((c+1)%t.length);a.play();p.innerText="⏸"};document.getElementById('gs-prev').onclick=()=>{set((c-1+t.length)%t.length);a.play();p.innerText="⏸"};document.getElementById('gs-list').onclick=()=>{const u=document.getElementById('gs-playlist-ui');u.style.display=u.style.display==='none'?'block':'none';u.innerHTML=t.map((x,i)=>\`<div style="padding:5px;cursor:pointer;border-bottom:1px solid #444" onclick="window.plTrack(\${i})">\${x.name}</div>\`).join('')};window.plTrack=(i)=>{set(i);a.play();p.innerText="⏸";document.getElementById('gs-playlist-ui').style.display='none'};load()})()<\/script>`;
 
         const resField = document.getElementById('code-res');
         resField.value = finalCode;
