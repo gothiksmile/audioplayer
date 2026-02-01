@@ -2,57 +2,76 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Genially Audio Builder Fixed</title>
+    <title>Genially Audio Widget Builder v3</title>
     <style>
-        body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .panel { width: 380px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        :root { --accent: #7d8da1; }
+        body { font-family: 'Segoe UI', sans-serif; background: #eef2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .builder-container { display: flex; gap: 30px; max-width: 1000px; width: 100%; }
+        
+        .panel { width: 350px; background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .input-group { margin-bottom: 15px; }
-        label { display: block; font-size: 12px; margin-bottom: 5px; color: #666; }
+        label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 5px; color: #666; }
         input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         
-        .gen-btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
-        .copy-btn { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: none; }
-        #code-res { width: 100%; height: 60px; margin-top: 10px; display: none; font-size: 10px; }
+        .preview-area { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #dfe6ed; border-radius: 20px; border: 2px dashed #bdc3c7; }
+        
+        /* Кнопки */
+        .gen-btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; transition: 0.3s; }
+        .copy-btn { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: none; transition: 0.3s; }
+        .copy-btn.success { background: #2ecc71; }
+        
+        #code-res { width: 100%; height: 100px; margin-top: 15px; font-size: 10px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 5px; display: none; }
 
-        /* Превью с исправленными размерами */
-        .preview-area { margin-top: 20px; padding: 40px; background: #dfe6ed; border-radius: 20px; width: 500px; display: flex; justify-content: center; }
+        /* Виджет (Превью) */
         .player-ui { width: 450px; height: 160px; display: flex; align-items: center; position: relative; }
-        .disk { width: 140px; height: 140px; border-radius: 50%; border: 5px solid white; box-shadow: 0 8px 15px rgba(0,0,0,0.2); z-index: 2; overflow: hidden; background: #333; flex-shrink: 0; }
+        .disk { width: 150px; height: 150px; border-radius: 50%; border: 5px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.2); z-index: 2; overflow: hidden; background: #333; }
         .disk img { width: 100%; height: 100%; object-fit: cover; }
-        .body { flex-grow: 1; height: 115px; margin-left: -50px; padding-left: 65px; border-radius: 15px; z-index: 1; display: flex; flex-direction: column; justify-content: center; color: white; }
+        .body { flex-grow: 1; height: 120px; margin-left: -55px; padding-left: 70px; padding-right: 20px; border-radius: 15px; z-index: 1; display: flex; flex-direction: column; justify-content: center; color: white; transition: 0.3s; }
+        .controls { display: flex; align-items: center; gap: 15px; margin-top: 10px; font-size: 18px; }
     </style>
 </head>
 <body>
 
-<div class="panel">
-    <div class="input-group">
-        <label>GitHub Репозиторий (user/repo)</label>
-        <input type="text" id="repo" value="gothiksmile/audioplayer">
+<div class="builder-container">
+    <div class="panel">
+        <h3>Настройки плеера</h3>
+        <div class="input-group">
+            <label>GitHub User/Repo</label>
+            <input type="text" id="repo" value="gothiksmile/audioplayer">
+        </div>
+        <div class="input-group">
+            <label>Ссылка на обложку</label>
+            <input type="text" id="cover" value="https://images.genially.com/genial.ly/genially/templates/75f04896-efbd-4681-a9ad-29477c1afe78.png">
+        </div>
+        <div class="input-group">
+            <label>Цвет фона</label>
+            <input type="color" id="color" value="#5d6d7e">
+        </div>
+        
+        <button class="gen-btn" onclick="generate()">1. Сгенерировать код</button>
+        <button id="copy-btn" class="copy-btn" onclick="copyCode()">2. Копировать код</button>
+        
+        <textarea id="code-res" readonly></textarea>
     </div>
-    <div class="input-group">
-        <label>Ссылка на обложку</label>
-        <input type="text" id="cover" value="https://images.genially.com/genial.ly/genially/templates/75f04896-efbd-4681-a9ad-29477c1afe78.png">
-    </div>
-    <div class="input-group">
-        <label>Цвет плеера</label>
-        <input type="color" id="color" value="#5d6d7e">
-    </div>
-    <button class="gen-btn" onclick="generate()">Сгенерировать код</button>
-    <button id="copy-btn" class="copy-btn" onclick="copyCode()">Копировать для Genially</button>
-    <textarea id="code-res"></textarea>
-</div>
 
-<div class="preview-area">
-    <div class="player-ui">
-        <div class="disk"><img id="p-img" src="https://images.genially.com/genial.ly/genially/templates/75f04896-efbd-4681-a9ad-29477c1afe78.png"></div>
-        <div class="body" id="p-body">
-            <div style="font-weight:bold">Preview Track</div>
-            <div style="font-size:12px; opacity:0.7">Artist Name</div>
+    <div class="preview-area">
+        <div class="player-ui">
+            <div class="disk"><img id="p-img" src=""></div>
+            <div class="body" id="p-body">
+                <div style="font-weight:bold" id="p-name">Audio</div>
+                <div style="font-size:12px; opacity:0.8">Track number</div>
+                <div class="controls">
+                    <span>⏮</span> <span style="font-size:24px">▶</span> <span>⏭</span>
+                    <span style="margin-left:auto; font-size:14px; opacity:0.6">🔀</span>
+                    <span style="font-size:14px; opacity:0.6">☰</span>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <script>
+    // Живое превью
     const update = () => {
         document.getElementById('p-img').src = document.getElementById('cover').value;
         document.getElementById('p-body').style.backgroundColor = document.getElementById('color').value;
@@ -65,44 +84,12 @@
         const color = document.getElementById('color').value;
         const cover = document.getElementById('cover').value;
 
-        // Код для вставки в Genially
-        const finalCode = `<div style="width:100%; min-width:460px; min-height:180px; display:flex; align-items:center; justify-content:center; background:transparent; overflow:visible;">
-<div id="gs-p" style="width:450px; height:160px; display:flex; align-items:center; position:relative; font-family:sans-serif;">
-<div style="width:140px; height:140px; border-radius:50%; border:5px solid #fff; box-shadow:0 8px 15px rgba(0,0,0,0.2); overflow:hidden; z-index:2; flex-shrink:0;">
-<img src="${cover}" style="width:100%; height:100%; object-fit:cover;"></div>
-<div style="flex-grow:1; height:115px; background:${color}; margin-left:-50px; padding-left:65px; padding-right:15px; border-radius:12px; color:#fff; display:flex; flex-direction:column; justify-content:center; z-index:1;">
-<div id="gt" style="font-weight:bold; font-size:14px; margin-bottom:8px;">Загрузка...</div>
-<div style="display:flex; align-items:center; gap:15px; font-size:20px;">
-<span id="gp" style="cursor:pointer">⏮</span><span id="ply" style="cursor:pointer; font-size:26px">▶</span><span id="gn" style="cursor:pointer">⏭</span>
-<span id="gs" style="cursor:pointer; margin-left:auto; font-size:16px; opacity:0.6">🔀</span><span id="gl" style="cursor:pointer; font-size:16px; opacity:0.6">☰</span>
-</div><audio id="ga"></audio>
-<div id="tpl" style="display:none; position:absolute; top:130px; left:65px; width:220px; background:rgba(0,0,0,0.9); border-radius:8px; padding:10px; max-height:120px; overflow-y:auto; font-size:11px; z-index:99;"></div>
-</div></div></div>
-<script>
-(function(){
-const r="${repo}", a=document.getElementById('ga'), t=document.getElementById('gt'), p=document.getElementById('ply');
-let tracks=[], cur=0, shuf=false;
-async function fetchTracks(){
-const branches=['main','master'];
-for(let b of branches){
-const res=await fetch('https://api.github.com/repos/'+r+'/contents/?ref='+b);
-if(res.ok){
-const d=await res.json();
-tracks=d.filter(f=>f.name.endsWith('.mp3')).map(f=>({name:f.name.replace('.mp3',''), url:f.download_url}));
-if(tracks.length>0){setTrack(0); return;}
-}}}
-function setTrack(i){cur=i; a.src=tracks[i].url; t.innerText=tracks[i].name;}
-p.onclick=()=>{if(a.paused){a.play().catch(e=>alert('Кликните по странице для запуска')); p.innerText="⏸"}else{a.pause(); p.innerText="▶"}};
-document.getElementById('gn').onclick=()=>{let n=shuf?Math.floor(Math.random()*tracks.length):(cur+1)%tracks.length; setTrack(n); a.play(); p.innerText="⏸"};
-document.getElementById('gp').onclick=()=>{let n=(cur-1+tracks.length)%tracks.length; setTrack(n); a.play(); p.innerText="⏸"};
-document.getElementById('gs').onclick=function(){shuf=!shuf; this.style.opacity=shuf?"1":"0.6"; this.style.color=shuf?"#ffeb3b":"#fff"};
-document.getElementById('gl').onclick=()=>{const l=document.getElementById('tpl'); l.style.display=l.style.display==='none'?'block':'none';
-l.innerHTML=tracks.map((x,i)=>'<div style="padding:5px; border-bottom:1px solid #444; cursor:pointer" onclick="window.goTrk('+i+')">'+x.name+'</div>').join('');};
-window.goTrk=(i)=>{setTrack(i); a.play(); p.innerText="⏸"; document.getElementById('tpl').style.display='none'};
-fetchTracks();})();<\/script>`;
+        // Весь движок плеера внутри одной строки (минимизировано для вставки)
+        const finalCode = `<div id="gs-player-root" style="width:450px;height:160px;display:flex;align-items:center;font-family:sans-serif;background:transparent;"><div style="width:140px;height:140px;border-radius:50%;border:5px solid #fff;box-shadow:0 8px 15px rgba(0,0,0,0.2);overflow:hidden;z-index:2;flex-shrink:0;"><img id="gs-art" src="${cover}" style="width:100%;height:100%;object-fit:cover;"></div><div id="gs-main" style="flex-grow:1;height:110px;background:${color};margin-left:-50px;padding-left:60px;padding-right:15px;border-radius:12px;color:#fff;display:flex;flex-direction:column;justify-content:center;z-index:1;position:relative;"><div style="font-weight:bold;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="gs-title">Загрузка...</div><div style="display:flex;align-items:center;gap:12px;margin-top:10px;font-size:18px;"><span id="gs-prev" style="cursor:pointer">⏮</span><span id="gs-play" style="cursor:pointer;font-size:24px">▶</span><span id="gs-next" style="cursor:pointer">⏭</span><span id="gs-shuff" style="cursor:pointer;margin-left:auto;font-size:14px;opacity:0.6">🔀</span><span id="gs-list" style="cursor:pointer;font-size:14px;opacity:0.6">☰</span></div><audio id="gs-audio"></audio><div id="gs-playlist-ui" style="display:none;position:absolute;top:115px;left:60px;width:200px;background:rgba(0,0,0,0.9);border-radius:8px;padding:10px;max-height:150px;overflow-y:auto;font-size:11px;z-index:10;box-shadow:0 5px 15px rgba(0,0,0,0.3)"></div></div></div><script>(function(){const r="${repo}",api="https://api.github.com/repos/"+r+"/contents/";let t=[],c=0,s=false;const a=document.getElementById('gs-audio'),ti=document.getElementById('gs-title'),p=document.getElementById('gs-play');async function load(){try{const res=await fetch(api),d=await res.json();t=d.filter(f=>f.name.endsWith('.mp3')).map(f=>({name:f.name.replace('.mp3',''),url:"https://raw.githubusercontent.com/"+r+"/main/"+f.path}));if(t.length>0)set(0)}catch(e){ti.innerText="Ошибка GitHub"}}function set(i){c=i;a.src=t[i].url;ti.innerText=t[i].name}p.onclick=()=>{if(a.paused){a.play();p.innerText="⏸"}else{a.pause();p.innerText="▶"}};document.getElementById('gs-next').onclick=()=>{let n=s?Math.floor(Math.random()*t.length):(c+1)%t.length;set(n);a.play();p.innerText="⏸"};document.getElementById('gs-prev').onclick=()=>{let pr=(c-1+t.length)%t.length;set(pr);a.play();p.innerText="⏸"};document.getElementById('gs-shuff').onclick=function(){s=!s;this.style.color=s?"#ffeb3b":"#fff";this.style.opacity=s?"1":"0.6"};document.getElementById('gs-list').onclick=()=>{const u=document.getElementById('gs-playlist-ui');u.style.display=u.style.display==='none'?'block':'none';u.innerHTML=t.map((x,i)=>\`<div style="padding:5px;cursor:pointer;border-bottom:1px solid #444" onclick="window.plTrack(\${i})">\${x.name}</div>\`).join('')};window.plTrack=(i)=>{set(i);a.play();p.innerText="⏸";document.getElementById('gs-playlist-ui').style.display='none'};load()})()<\/script>`;
 
-        document.getElementById('code-res').value = finalCode;
-        document.getElementById('code-res').style.display = 'block';
+        const resField = document.getElementById('code-res');
+        resField.value = finalCode;
+        resField.style.display = 'block';
         document.getElementById('copy-btn').style.display = 'block';
     }
 
@@ -110,10 +97,18 @@ fetchTracks();})();<\/script>`;
         const text = document.getElementById('code-res');
         text.select();
         document.execCommand('copy');
+        
         const btn = document.getElementById('copy-btn');
+        const oldText = btn.innerText;
         btn.innerText = "✅ Скопировано!";
-        setTimeout(() => btn.innerText = "Копировать для Genially", 2000);
+        btn.classList.add('success');
+        
+        setTimeout(() => {
+            btn.innerText = oldText;
+            btn.classList.remove('success');
+        }, 2000);
     }
 </script>
+
 </body>
 </html>
