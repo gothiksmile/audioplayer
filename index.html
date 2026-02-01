@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Genially Music Configurator</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; display: flex; justify-content: center; padding: 40px; }
+        .editor-box { background: #252525; border-radius: 15px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        h2 { border-left: 4px solid #00c3ff; padding-left: 10px; margin-bottom: 20px; }
+        .control-group { margin-bottom: 15px; }
+        label { display: block; font-size: 13px; margin-bottom: 5px; color: #aaa; }
+        input, textarea { width: 100%; background: #333; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; box-sizing: border-box; }
+        .btn-panel { grid-column: 1 / -1; display: flex; gap: 10px; }
+        button { flex: 1; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-gen { background: #00c3ff; color: #000; }
+        .btn-copy { background: #2ecc71; color: #000; }
+        
+        /* Preview Mockup */
+        .preview-area { background: #111; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .mock-player { display: flex; align-items: center; background: #50626e; border-radius: 0 60px 60px 0; padding: 15px; width: 320px; color: white; margin-left: 40px; }
+        .mock-art { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #fff; margin-left: -60px; background: #333; background-size: cover; }
+    </style>
+</head>
+<body>
+
+<div class="editor-box">
+    <div>
+        <h2>1. Настройка вида</h2>
+        <div class="control-group">
+            <label>Цвет фона плеера</label>
+            <input type="color" id="p-bg" value="#50626e" oninput="liveUpdate()">
+        </div>
+        <div class="control-group">
+            <label>Цвет текста</label>
+            <input type="color" id="p-text" value="#ffffff" oninput="liveUpdate()">
+        </div>
+        <div class="control-group">
+            <label>Цвет активных элементов</label>
+            <input type="color" id="p-accent" value="#ff4d4d" oninput="liveUpdate()">
+        </div>
+        <div class="control-group">
+            <label>Прямая ссылка на обложку (URL)</label>
+            <input type="text" id="p-cover" value="https://raw.githubusercontent.com/gothiksmile/audioplayer/main/cover.jpg" oninput="liveUpdate()">
+        </div>
+    </div>
+
+    <div>
+        <h2>2. Предпросмотр</h2>
+        <div class="preview-area" id="area">
+             <div class="mock-player" id="m-player">
+                 <div class="mock-art" id="m-art"></div>
+                 <div style="margin-left:50px">
+                     <b id="m-title">Radioactive</b><br><small>Imagine Dragons</small>
+                     <div style="margin-top:10px; opacity:0.7">⏮  ⏸  ⏭  🔀  ☰</div>
+                 </div>
+             </div>
+        </div>
+        <label style="margin-top:20px">Список треков (один на строку):</label>
+        <textarea id="p-list" rows="4">https://raw.githubusercontent.com/gothiksmile/audioplayer/main/track1.mp3
+https://raw.githubusercontent.com/gothiksmile/audioplayer/main/track2.mp3</textarea>
+    </div>
+
+    <div class="btn-panel">
+        <button class="btn-gen" onclick="generate()">СГЕНЕРИРОВАТЬ КОД</button>
+        <button class="btn-copy" onclick="copy()">КОПИРОВАТЬ В БУФЕР</button>
+    </div>
+
+    <div style="grid-column: 1 / -1;">
+        <textarea id="output-code" readonly style="height: 100px; font-family: monospace; font-size: 11px;"></textarea>
+    </div>
+</div>
+
+<script>
+function liveUpdate() {
+    const player = document.getElementById('m-player');
+    player.style.backgroundColor = document.getElementById('p-bg').value;
+    player.style.color = document.getElementById('p-text').value;
+    document.getElementById('m-art').style.backgroundImage = `url('${document.getElementById('p-cover').value}')`;
+}
+
+function generate() {
+    const bg = document.getElementById('p-bg').value;
+    const txt = document.getElementById('p-text').value;
+    const acc = document.getElementById('p-accent').value;
+    const cover = document.getElementById('p-cover').value;
+    const tracks = document.getElementById('p-list').value.split('\n').filter(t => t.trim() !== '').map(t => t.trim());
+    
+    const finalCode = `
+<div id="genially-player-wrapper" style="display:flex; align-items:center; padding: 60px 20px; background:transparent; font-family: sans-serif;">
+    <style>
+        .g-container { display:flex; align-items:center; background:${bg}; border-radius:0 60px 60px 0; padding:15px 40px 15px 15px; color:${txt}; position:relative; min-width:300px; box-shadow:0 10px 25px rgba(0,0,0,0.2); margin-left:60px; transition: 0.3s; }
+        .g-art { width:110px; height:110px; border-radius:50%; border:4px solid #fff; position:absolute; left:-65px; background:url('${cover}') center/cover; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
+        .g-art.playing { animation: rot 10s linear infinite; }
+        @keyframes rot { from {transform:rotate(0deg)} to {transform:rotate(360deg)} }
+        .g-controls { display:flex; gap:12px; align-items:center; margin-top:8px; }
+        .g-btn { cursor:pointer; background:none; border:none; color:inherit; font-size:18px; opacity:0.8; }
+        .g-btn:hover { opacity:1; transform:scale(1.1); }
+        .g-btn.active { color:${acc}; }
+        #g-progress-bg { width:100%; height:4px; background:rgba(255,255,255,0.2); margin-top:10px; border-radius:2px; cursor:pointer; }
+        #g-progress-act { height:100%; background:${acc}; width:0%; border-radius:2px; }
+        #g-playlist { position:absolute; top:100%; left:0; width:100%; background:${bg}; color:${txt}; border-radius:10px; display:none; margin-top:10px; z-index:100; max-height:150px; overflow-y:auto; padding:10px; font-size:12px; }
+    </style>
+
+    <div class="g-container">
+        <div class="g-art" id="ga"></div>
+        <div style="margin-left:55px; flex-grow:1;">
+            <div id="gt" style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">Track 1</div>
+            <div class="g-controls">
+                <button class="g-btn" onclick="gPrev()">⏮</button>
+                <button class="g-btn" id="gp" onclick="gToggle()" style="font-size:24px;">▶</button>
+                <button class="g-btn" onclick="gNext()">⏭</button>
+                <button class="g-btn" id="grand" onclick="gRandom()">🔀</button>
+                <button class="g-btn" onclick="gList()">☰</button>
+            </div>
+            <div id="g-progress-bg" onclick="gSeek(event)"><div id="g-progress-act"></div></div>
+            <div id="g-playlist"></div>
+        </div>
+        <audio id="gaudio"></audio>
+    </div>
+
+    <script>
+        const trks = ${JSON.stringify(tracks)};
+        let idx = 0; let isRnd = false;
+        const aud = document.getElementById('gaudio');
+        const listDiv = document.getElementById('g-playlist');
+
+        function load(i) { 
+            idx = i; aud.src = trks[idx]; 
+            document.getElementById('gt').innerText = trks[idx].split('/').pop();
+            renderList();
+        }
+        function gToggle() { 
+            if(aud.paused) { aud.play(); document.getElementById('gp').innerText='⏸'; document.getElementById('ga').classList.add('playing'); }
+            else { aud.audio.pause(); document.getElementById('gp').innerText='▶'; document.getElementById('ga').classList.remove('playing'); }
+        }
+        function gNext() { if(isRnd) idx = Math.floor(Math.random()*trks.length); else idx = (idx+1)%trks.length; load(idx); aud.play(); }
+        function gPrev() { idx = (idx-1+trks.length)%trks.length; load(idx); aud.play(); }
+        function gRandom() { isRnd = !isRnd; document.getElementById('grand').classList.toggle('active'); }
+        function gList() { listDiv.style.display = listDiv.style.display==='block' ? 'none' : 'block'; }
+        function gSeek(e) { aud.currentTime = (e.offsetX / e.target.clientWidth) * aud.duration; }
+        function renderList() { listDiv.innerHTML = trks.map((t,i) => \`<div onclick="load(\${i});aud.play();" style="padding:5px; cursor:pointer; opacity:\${i===idx?1:0.6}">\${t.split('/').pop()}</div>\`).join(''); }
+        
+        aud.ontimeupdate = () => { document.getElementById('g-progress-act').style.width = (aud.currentTime/aud.duration*100)+'%'; };
+        aud.onended = () => gNext();
+        load(0);
+    <\/script>
+</div>`;
+
+    document.getElementById('output-code').value = finalCode;
+}
+
+function copy() {
+    const out = document.getElementById('output-code');
+    out.select();
+    document.execCommand('copy');
+    alert('Код в буфере! Теперь вставьте его в Genially.');
+}
+liveUpdate();
+</script>
+</body>
+</html>
