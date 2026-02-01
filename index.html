@@ -2,160 +2,118 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Genially Music Configurator</title>
+    <title>Genially Audio Builder Fixed</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; display: flex; justify-content: center; padding: 40px; }
-        .editor-box { background: #252525; border-radius: 15px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
-        h2 { border-left: 4px solid #00c3ff; padding-left: 10px; margin-bottom: 20px; }
-        .control-group { margin-bottom: 15px; }
-        label { display: block; font-size: 13px; margin-bottom: 5px; color: #aaa; }
-        input, textarea { width: 100%; background: #333; border: 1px solid #444; color: white; padding: 10px; border-radius: 5px; box-sizing: border-box; }
-        .btn-panel { grid-column: 1 / -1; display: flex; gap: 10px; }
-        button { flex: 1; padding: 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-gen { background: #00c3ff; color: #000; }
-        .btn-copy { background: #2ecc71; color: #000; }
+        body { font-family: sans-serif; background: #f0f2f5; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+        .panel { width: 380px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; font-size: 12px; margin-bottom: 5px; color: #666; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         
-        /* Preview Mockup */
-        .preview-area { background: #111; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .mock-player { display: flex; align-items: center; background: #50626e; border-radius: 0 60px 60px 0; padding: 15px; width: 320px; color: white; margin-left: 40px; }
-        .mock-art { width: 100px; height: 100px; border-radius: 50%; border: 3px solid #fff; margin-left: -60px; background: #333; background-size: cover; }
+        .gen-btn { width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+        .copy-btn { width: 100%; padding: 12px; background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; display: none; }
+        #code-res { width: 100%; height: 60px; margin-top: 10px; display: none; font-size: 10px; }
+
+        /* Превью с исправленными размерами */
+        .preview-area { margin-top: 20px; padding: 40px; background: #dfe6ed; border-radius: 20px; width: 500px; display: flex; justify-content: center; }
+        .player-ui { width: 450px; height: 160px; display: flex; align-items: center; position: relative; }
+        .disk { width: 140px; height: 140px; border-radius: 50%; border: 5px solid white; box-shadow: 0 8px 15px rgba(0,0,0,0.2); z-index: 2; overflow: hidden; background: #333; flex-shrink: 0; }
+        .disk img { width: 100%; height: 100%; object-fit: cover; }
+        .body { flex-grow: 1; height: 115px; margin-left: -50px; padding-left: 65px; border-radius: 15px; z-index: 1; display: flex; flex-direction: column; justify-content: center; color: white; }
     </style>
 </head>
 <body>
 
-<div class="editor-box">
-    <div>
-        <h2>1. Настройка вида</h2>
-        <div class="control-group">
-            <label>Цвет фона плеера</label>
-            <input type="color" id="p-bg" value="#50626e" oninput="liveUpdate()">
-        </div>
-        <div class="control-group">
-            <label>Цвет текста</label>
-            <input type="color" id="p-text" value="#ffffff" oninput="liveUpdate()">
-        </div>
-        <div class="control-group">
-            <label>Цвет активных элементов</label>
-            <input type="color" id="p-accent" value="#ff4d4d" oninput="liveUpdate()">
-        </div>
-        <div class="control-group">
-            <label>Прямая ссылка на обложку (URL)</label>
-            <input type="text" id="p-cover" value="https://raw.githubusercontent.com/gothiksmile/audioplayer/main/cover.jpg" oninput="liveUpdate()">
-        </div>
+<div class="panel">
+    <div class="input-group">
+        <label>GitHub Репозиторий (user/repo)</label>
+        <input type="text" id="repo" value="gothiksmile/audioplayer">
     </div>
+    <div class="input-group">
+        <label>Ссылка на обложку</label>
+        <input type="text" id="cover" value="https://upload.wikimedia.org/wikipedia/en/b/b3/Imagine_Dragons_Night_Visions.jpg">
+    </div>
+    <div class="input-group">
+        <label>Цвет плеера</label>
+        <input type="color" id="color" value="#5d6d7e">
+    </div>
+    <button class="gen-btn" onclick="generate()">Сгенерировать код</button>
+    <button id="copy-btn" class="copy-btn" onclick="copyCode()">Копировать для Genially</button>
+    <textarea id="code-res"></textarea>
+</div>
 
-    <div>
-        <h2>2. Предпросмотр</h2>
-        <div class="preview-area" id="area">
-             <div class="mock-player" id="m-player">
-                 <div class="mock-art" id="m-art"></div>
-                 <div style="margin-left:50px">
-                     <b id="m-title">Radioactive</b><br><small>Imagine Dragons</small>
-                     <div style="margin-top:10px; opacity:0.7">⏮  ⏸  ⏭  🔀  ☰</div>
-                 </div>
-             </div>
+<div class="preview-area">
+    <div class="player-ui">
+        <div class="disk"><img id="p-img" src="https://upload.wikimedia.org/wikipedia/en/b/b3/Imagine_Dragons_Night_Visions.jpg"></div>
+        <div class="body" id="p-body">
+            <div style="font-weight:bold">Preview Track</div>
+            <div style="font-size:12px; opacity:0.7">Artist Name</div>
         </div>
-        <label style="margin-top:20px">Список треков (один на строку):</label>
-        <textarea id="p-list" rows="4">https://raw.githubusercontent.com/gothiksmile/audioplayer/main/track1.mp3
-https://raw.githubusercontent.com/gothiksmile/audioplayer/main/track2.mp3</textarea>
-    </div>
-
-    <div class="btn-panel">
-        <button class="btn-gen" onclick="generate()">СГЕНЕРИРОВАТЬ КОД</button>
-        <button class="btn-copy" onclick="copy()">КОПИРОВАТЬ В БУФЕР</button>
-    </div>
-
-    <div style="grid-column: 1 / -1;">
-        <textarea id="output-code" readonly style="height: 100px; font-family: monospace; font-size: 11px;"></textarea>
     </div>
 </div>
 
 <script>
-function liveUpdate() {
-    const player = document.getElementById('m-player');
-    player.style.backgroundColor = document.getElementById('p-bg').value;
-    player.style.color = document.getElementById('p-text').value;
-    document.getElementById('m-art').style.backgroundImage = `url('${document.getElementById('p-cover').value}')`;
-}
+    const update = () => {
+        document.getElementById('p-img').src = document.getElementById('cover').value;
+        document.getElementById('p-body').style.backgroundColor = document.getElementById('color').value;
+    };
+    document.querySelectorAll('input').forEach(i => i.addEventListener('input', update));
+    update();
 
-function generate() {
-    const bg = document.getElementById('p-bg').value;
-    const txt = document.getElementById('p-text').value;
-    const acc = document.getElementById('p-accent').value;
-    const cover = document.getElementById('p-cover').value;
-    const tracks = document.getElementById('p-list').value.split('\n').filter(t => t.trim() !== '').map(t => t.trim());
-    
-    const finalCode = `
-<div id="genially-player-wrapper" style="display:flex; align-items:center; padding: 60px 20px; background:transparent; font-family: sans-serif;">
-    <style>
-        .g-container { display:flex; align-items:center; background:${bg}; border-radius:0 60px 60px 0; padding:15px 40px 15px 15px; color:${txt}; position:relative; min-width:300px; box-shadow:0 10px 25px rgba(0,0,0,0.2); margin-left:60px; transition: 0.3s; }
-        .g-art { width:110px; height:110px; border-radius:50%; border:4px solid #fff; position:absolute; left:-65px; background:url('${cover}') center/cover; box-shadow:0 5px 15px rgba(0,0,0,0.3); }
-        .g-art.playing { animation: rot 10s linear infinite; }
-        @keyframes rot { from {transform:rotate(0deg)} to {transform:rotate(360deg)} }
-        .g-controls { display:flex; gap:12px; align-items:center; margin-top:8px; }
-        .g-btn { cursor:pointer; background:none; border:none; color:inherit; font-size:18px; opacity:0.8; }
-        .g-btn:hover { opacity:1; transform:scale(1.1); }
-        .g-btn.active { color:${acc}; }
-        #g-progress-bg { width:100%; height:4px; background:rgba(255,255,255,0.2); margin-top:10px; border-radius:2px; cursor:pointer; }
-        #g-progress-act { height:100%; background:${acc}; width:0%; border-radius:2px; }
-        #g-playlist { position:absolute; top:100%; left:0; width:100%; background:${bg}; color:${txt}; border-radius:10px; display:none; margin-top:10px; z-index:100; max-height:150px; overflow-y:auto; padding:10px; font-size:12px; }
-    </style>
+    function generate() {
+        const repo = document.getElementById('repo').value;
+        const color = document.getElementById('color').value;
+        const cover = document.getElementById('cover').value;
 
-    <div class="g-container">
-        <div class="g-art" id="ga"></div>
-        <div style="margin-left:55px; flex-grow:1;">
-            <div id="gt" style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">Track 1</div>
-            <div class="g-controls">
-                <button class="g-btn" onclick="gPrev()">⏮</button>
-                <button class="g-btn" id="gp" onclick="gToggle()" style="font-size:24px;">▶</button>
-                <button class="g-btn" onclick="gNext()">⏭</button>
-                <button class="g-btn" id="grand" onclick="gRandom()">🔀</button>
-                <button class="g-btn" onclick="gList()">☰</button>
-            </div>
-            <div id="g-progress-bg" onclick="gSeek(event)"><div id="g-progress-act"></div></div>
-            <div id="g-playlist"></div>
-        </div>
-        <audio id="gaudio"></audio>
-    </div>
+        // Код для вставки в Genially
+        const finalCode = `<div style="width:100%; min-width:460px; min-height:180px; display:flex; align-items:center; justify-content:center; background:transparent; overflow:visible;">
+<div id="gs-p" style="width:450px; height:160px; display:flex; align-items:center; position:relative; font-family:sans-serif;">
+<div style="width:140px; height:140px; border-radius:50%; border:5px solid #fff; box-shadow:0 8px 15px rgba(0,0,0,0.2); overflow:hidden; z-index:2; flex-shrink:0;">
+<img src="${cover}" style="width:100%; height:100%; object-fit:cover;"></div>
+<div style="flex-grow:1; height:115px; background:${color}; margin-left:-50px; padding-left:65px; padding-right:15px; border-radius:12px; color:#fff; display:flex; flex-direction:column; justify-content:center; z-index:1;">
+<div id="gt" style="font-weight:bold; font-size:14px; margin-bottom:8px;">Загрузка...</div>
+<div style="display:flex; align-items:center; gap:15px; font-size:20px;">
+<span id="gp" style="cursor:pointer">⏮</span><span id="ply" style="cursor:pointer; font-size:26px">▶</span><span id="gn" style="cursor:pointer">⏭</span>
+<span id="gs" style="cursor:pointer; margin-left:auto; font-size:16px; opacity:0.6">🔀</span><span id="gl" style="cursor:pointer; font-size:16px; opacity:0.6">☰</span>
+</div><audio id="ga"></audio>
+<div id="tpl" style="display:none; position:absolute; top:130px; left:65px; width:220px; background:rgba(0,0,0,0.9); border-radius:8px; padding:10px; max-height:120px; overflow-y:auto; font-size:11px; z-index:99;"></div>
+</div></div></div>
+<script>
+(function(){
+const r="${repo}", a=document.getElementById('ga'), t=document.getElementById('gt'), p=document.getElementById('ply');
+let tracks=[], cur=0, shuf=false;
+async function fetchTracks(){
+const branches=['main','master'];
+for(let b of branches){
+const res=await fetch('https://api.github.com/repos/'+r+'/contents/?ref='+b);
+if(res.ok){
+const d=await res.json();
+tracks=d.filter(f=>f.name.endsWith('.mp3')).map(f=>({name:f.name.replace('.mp3',''), url:f.download_url}));
+if(tracks.length>0){setTrack(0); return;}
+}}}
+function setTrack(i){cur=i; a.src=tracks[i].url; t.innerText=tracks[i].name;}
+p.onclick=()=>{if(a.paused){a.play().catch(e=>alert('Кликните по странице для запуска')); p.innerText="⏸"}else{a.pause(); p.innerText="▶"}};
+document.getElementById('gn').onclick=()=>{let n=shuf?Math.floor(Math.random()*tracks.length):(cur+1)%tracks.length; setTrack(n); a.play(); p.innerText="⏸"};
+document.getElementById('gp').onclick=()=>{let n=(cur-1+tracks.length)%tracks.length; setTrack(n); a.play(); p.innerText="⏸"};
+document.getElementById('gs').onclick=function(){shuf=!shuf; this.style.opacity=shuf?"1":"0.6"; this.style.color=shuf?"#ffeb3b":"#fff"};
+document.getElementById('gl').onclick=()=>{const l=document.getElementById('tpl'); l.style.display=l.style.display==='none'?'block':'none';
+l.innerHTML=tracks.map((x,i)=>'<div style="padding:5px; border-bottom:1px solid #444; cursor:pointer" onclick="window.goTrk('+i+')">'+x.name+'</div>').join('');};
+window.goTrk=(i)=>{setTrack(i); a.play(); p.innerText="⏸"; document.getElementById('tpl').style.display='none'};
+fetchTracks();})();<\/script>`;
 
-    <script>
-        const trks = ${JSON.stringify(tracks)};
-        let idx = 0; let isRnd = false;
-        const aud = document.getElementById('gaudio');
-        const listDiv = document.getElementById('g-playlist');
+        document.getElementById('code-res').value = finalCode;
+        document.getElementById('code-res').style.display = 'block';
+        document.getElementById('copy-btn').style.display = 'block';
+    }
 
-        function load(i) { 
-            idx = i; aud.src = trks[idx]; 
-            document.getElementById('gt').innerText = trks[idx].split('/').pop();
-            renderList();
-        }
-        function gToggle() { 
-            if(aud.paused) { aud.play(); document.getElementById('gp').innerText='⏸'; document.getElementById('ga').classList.add('playing'); }
-            else { aud.audio.pause(); document.getElementById('gp').innerText='▶'; document.getElementById('ga').classList.remove('playing'); }
-        }
-        function gNext() { if(isRnd) idx = Math.floor(Math.random()*trks.length); else idx = (idx+1)%trks.length; load(idx); aud.play(); }
-        function gPrev() { idx = (idx-1+trks.length)%trks.length; load(idx); aud.play(); }
-        function gRandom() { isRnd = !isRnd; document.getElementById('grand').classList.toggle('active'); }
-        function gList() { listDiv.style.display = listDiv.style.display==='block' ? 'none' : 'block'; }
-        function gSeek(e) { aud.currentTime = (e.offsetX / e.target.clientWidth) * aud.duration; }
-        function renderList() { listDiv.innerHTML = trks.map((t,i) => \`<div onclick="load(\${i});aud.play();" style="padding:5px; cursor:pointer; opacity:\${i===idx?1:0.6}">\${t.split('/').pop()}</div>\`).join(''); }
-        
-        aud.ontimeupdate = () => { document.getElementById('g-progress-act').style.width = (aud.currentTime/aud.duration*100)+'%'; };
-        aud.onended = () => gNext();
-        load(0);
-    <\/script>
-</div>`;
-
-    document.getElementById('output-code').value = finalCode;
-}
-
-function copy() {
-    const out = document.getElementById('output-code');
-    out.select();
-    document.execCommand('copy');
-    alert('Код в буфере! Теперь вставьте его в Genially.');
-}
-liveUpdate();
+    function copyCode() {
+        const text = document.getElementById('code-res');
+        text.select();
+        document.execCommand('copy');
+        const btn = document.getElementById('copy-btn');
+        btn.innerText = "✅ Скопировано!";
+        setTimeout(() => btn.innerText = "Копировать для Genially", 2000);
+    }
 </script>
 </body>
 </html>
